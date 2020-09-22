@@ -50,6 +50,7 @@ public class Bot extends ListenerAdapter {
         if (!event.getAuthor().isBot()) {
             var rawMsgContent = event.getMessage().getContentRaw();
             if (rawMsgContent.matches(CMD_PRINT_MESSAGES)) {
+                log.info("Print messages command by {}", event.getAuthor());
                 printMessages(event.getChannel());
             }
         }
@@ -64,17 +65,23 @@ public class Bot extends ListenerAdapter {
         channel.sendMessage((!message.isEmpty()) ? message : "no messages stored").queue();
     }
 
+    private void queueMessage(MessageChannel channel, String message) {
+        channel.sendMessage(message).queue();
+    }
+
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
         var emoji = event.getReaction().getReactionEmote().getEmoji();
         if (EMOJI_PIZZA.equals(emoji)) {
-            event.getChannel().sendMessage(EMOJI_PIZZA + " reaction found!").queue();
+            var channel = event.getChannel();
             var messageId = event.getMessageId();
             event.getChannel()
                     .retrieveMessageById(messageId)
                     .queue(message -> {
                         messages.put(message.getId(), message);
-                        log.info("Added message {}", message);
+                        var msg = String.format("Added message: %s", message);
+                        log.info(msg);
+                        queueMessage(channel, msg);
                     });
         }
     }
@@ -84,13 +91,15 @@ public class Bot extends ListenerAdapter {
         var emoji = event.getReaction().getReactionEmote().getEmoji();
         if (EMOJI_PIZZA.equals(emoji)) {
             var messageId = event.getMessageId();
-            event.getChannel()
-                    .retrieveMessageById(messageId)
+            var channel = event.getChannel();
+            channel.retrieveMessageById(messageId)
                     .queue(message -> {
                         if (message.getReactions().stream()
                                 .noneMatch(reaction -> reaction.getReactionEmote().getEmoji().equals(EMOJI_PIZZA))) {
-                            log.info("Removed message due to no more pizza {}", message);
                             messages.remove(message.getId());
+                            var msg = String.format("Removed message due to no more pizza %s", message);
+                            log.info(msg);
+                            queueMessage(channel, msg);
                         }
                     });
         }
