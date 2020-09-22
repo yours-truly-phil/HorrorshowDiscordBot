@@ -11,6 +11,8 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -23,21 +25,21 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PizzaBot extends ListenerAdapter {
 
+    private static final String PROP_TOKEN = "${jda.discord.token}";
+
     private static final String EMOJI_PIZZA = "\uD83C\uDF55";
     private static final String CMD_PRINT_MESSAGES = "\\$messages";
 
     private final Map<String, Message> messages = new HashMap<>();
+
     @Getter
-    private JDA jda;
+    private final JDA jda;
 
-    public PizzaBot() {
-    }
-
-    public void startUp(String token) throws LoginException {
-        JDA jda = JDABuilder.createDefault(token).build();
-        Assert.notNull(jda, "JDA must not be null, check the logs");
+    public PizzaBot(@Autowired @Value(PROP_TOKEN) String token) throws LoginException {
+        Assert.notNull(token, "Token must not be null, did you forget to set ${%s}?".formatted(PROP_TOKEN));
+        jda = JDABuilder.createDefault(token).build();
+        jda.setAutoReconnect(true);
         jda.addEventListener(this);
-        this.jda = jda;
     }
 
     @Override
