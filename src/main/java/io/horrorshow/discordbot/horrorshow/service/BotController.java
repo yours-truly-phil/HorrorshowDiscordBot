@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.security.auth.login.LoginException;
@@ -19,15 +18,18 @@ public class BotController {
 
     private final PizzaBot pizzaBot;
 
+    private final String token;
+
     public BotController(@Autowired PizzaBot pizzaBot,
                          @Autowired @Value(PROP_TOKEN) String token) {
         Assert.notNull(token, "Token must not be null, did you forget to set ${%s}?".formatted(PROP_TOKEN));
         Assert.notNull(pizzaBot, "%s must not be null".formatted(PizzaBot.class.getName()));
+        this.token = token;
         this.pizzaBot = pizzaBot;
     }
 
-    @GetMapping("/pizzabot/startup/{token}")
-    public String startUpPizzaBot(@PathVariable String token) {
+    @GetMapping("/pizzabot/startup")
+    public String startUpPizzaBot() {
         if (pizzaBot.getJda() == null || pizzaBot.getJda().getStatus() == JDA.Status.DISCONNECTED) {
             try {
                 pizzaBot.startUp(token);
