@@ -1,5 +1,6 @@
 package io.horrorshow.discordbot.horrorshow.service;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -26,20 +27,17 @@ public class PizzaBot extends ListenerAdapter {
     private static final String CMD_PRINT_MESSAGES = "\\$messages";
 
     private final Map<String, Message> messages = new HashMap<>();
+    @Getter
+    private JDA jda;
 
     public PizzaBot() {
     }
 
-    public void startUp(String token) {
-        try {
-            JDA jda = JDABuilder.createDefault(token).build();
-            Assert.notNull(jda, "JDA must not be null, check the logs");
-
-            jda.addEventListener(this);
-
-        } catch (LoginException e) {
-            log.error("Login Exception during JDA creation", e);
-        }
+    public void startUp(String token) throws LoginException {
+        JDA jda = JDABuilder.createDefault(token).build();
+        Assert.notNull(jda, "JDA must not be null, check the logs");
+        jda.addEventListener(this);
+        this.jda = jda;
     }
 
     @Override
