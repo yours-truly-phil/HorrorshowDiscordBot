@@ -25,12 +25,11 @@ import java.util.stream.Collectors;
 public class Bot extends ListenerAdapter {
 
     private static final String PROP_TOKEN = "jda.discord.token";
-
     private static final String EMOJI_PIZZA = "\uD83C\uDF55";
-
     private static final String CMD_PRINT_MESSAGES = "\\$messages";
-    private static final Map<String, Message> messages = new HashMap<>();
-    private static JDA jda;
+
+    private final Map<String, Message> messages = new HashMap<>();
+    private JDA jda;
 
     public Bot(@Autowired @Value("${" + PROP_TOKEN + "}") String TOKEN) {
         Assert.notNull(TOKEN, "Token must not be null, did you forget to set ${" + PROP_TOKEN + "}?");
