@@ -4,10 +4,9 @@ import io.horrorshow.discordbot.horrorshow.HorrorshowDiscordBotApplication;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/pizzabot")
@@ -24,6 +23,21 @@ public class PizzaBotController {
     @GetMapping("/status")
     public String getPizzaBotStatus() {
         return pizzaBot.getJda().getStatus().toString();
+    }
+
+    @GetMapping("/channels")
+    public String getTextChannels() {
+        return pizzaBot.getTextChannels().stream()
+                .map(textChannel -> "Name: " + textChannel.getName()
+                        + " Id: " + textChannel.getId()
+                        + " Users: " + textChannel.getMembers().size()
+                        + " canTalk: " + textChannel.canTalk())
+                .collect(Collectors.joining("\n"));
+    }
+
+    @PostMapping("/send/{channel}/{message}")
+    public void sendMessage(@PathVariable String channel, @PathVariable String message) {
+        pizzaBot.sendMessage(channel, message);
     }
 
     @PostMapping("/kill")

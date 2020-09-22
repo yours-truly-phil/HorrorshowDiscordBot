@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
@@ -18,7 +19,9 @@ import org.springframework.util.Assert;
 
 import javax.security.auth.login.LoginException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,6 +53,17 @@ public class PizzaBot extends ListenerAdapter {
                 log.info("Print messages command by {}", event.getAuthor());
                 printMessages(event.getChannel());
             }
+        }
+    }
+
+    public List<TextChannel> getTextChannels() {
+        return jda.getTextChannels();
+    }
+
+    public void sendMessage(String channelId, String message) {
+        var channel = jda.getTextChannelById(channelId);
+        if (channel != null && channel.canTalk()) {
+            queueMessage(Objects.requireNonNull(jda.getTextChannelById(channelId)), message);
         }
     }
 
