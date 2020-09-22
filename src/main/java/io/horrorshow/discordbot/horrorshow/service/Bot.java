@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ import javax.security.auth.login.LoginException;
 public class Bot extends ListenerAdapter {
 
     private static final String PROP_TOKEN = "jda.discord.token";
+
+    private static final String EMOJI_PIZZA = "\uD83C\uDF55";
 
     private static JDA jda;
 
@@ -36,11 +39,14 @@ public class Bot extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        if (!event.getAuthor().isBot()) {
-            event.getMessage().addReaction("\uD83C\uDF55").queue();
-            event.getChannel().sendMessage("Pizza").queue(message -> {
-                message.addReaction("\uD83C\uDF55").queue();
-            });
+
+    }
+
+    @Override
+    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
+        var emoji = event.getReaction().getReactionEmote().getEmoji();
+        if (EMOJI_PIZZA.equals(emoji)) {
+            event.getChannel().sendMessage(EMOJI_PIZZA + " reaction found!").queue();
         }
     }
 }
