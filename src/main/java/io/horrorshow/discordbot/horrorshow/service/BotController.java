@@ -43,4 +43,10 @@ public class BotController {
         }
     }
 
+    @GetMapping("/pizzabot/status")
+    public String getPizzaBotStatus() {
+        if (pizzaBot.getJda() == null) return "null";
+        return pizzaBot.getJda().getStatus().toString();
+    }
+
 }
