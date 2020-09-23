@@ -32,13 +32,17 @@ public class PizzaBot extends ListenerAdapter {
 
     private static final String EMOJI_PIZZA = "\uD83C\uDF55";
     private static final String CMD_PRINT_MESSAGES = "\\$messages";
+    private static final String CMD_AVERAGE_PRICE = "\\$avgPrice .+";
 
     private final Map<String, Message> messages = new HashMap<>();
 
     @Getter
     private final JDA jda;
+    private final BinanceAPI binanceAPI;
 
-    public PizzaBot(@Autowired @Value(PROP_TOKEN) String token) throws LoginException {
+    public PizzaBot(@Autowired @Value(PROP_TOKEN) String token,
+                    @Autowired BinanceAPI binanceAPI) throws LoginException {
+        this.binanceAPI = binanceAPI;
         Assert.notNull(token, "Token must not be null, did you forget to set ${%s}?".formatted(PROP_TOKEN));
         jda = JDABuilder.createDefault(token).build();
         jda.setAutoReconnect(true);
@@ -52,8 +56,17 @@ public class PizzaBot extends ListenerAdapter {
             if (rawMsgContent.matches(CMD_PRINT_MESSAGES)) {
                 log.info("Print messages command by {}", event.getAuthor());
                 printMessages(event.getChannel());
+            } else if (rawMsgContent.matches(CMD_AVERAGE_PRICE)) {
+                var avgPrice = binanceAvgPrice(rawMsgContent);
+                sendMessage(event.getChannel().getId(), avgPrice);
             }
         }
+    }
+
+    private String binanceAvgPrice(String rawMsgContent) {
+        var tokens = rawMsgContent.split(" ");
+        if (tokens.length > 1) return binanceAPI.getAveragePrice(tokens[1]);
+        else return "missing symbol parameter: $avgPrice <SYMBOL>";
     }
 
     public List<TextChannel> getTextChannels() {
