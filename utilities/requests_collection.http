@@ -1,0 +1,38 @@
+###
+GET http://localhost:8080/pizzabot/status
+
+###
+GET http://localhost:8080/pizzabot/channels
+
+###
+POST http://localhost:8080/pizzabot/send/757901568212205621/Testmessage what's up
+
+###
+POST http://localhost:8080/pizzabot/kill
+
+###
+POST http://localhost:8080/pizzabot/restart
+
+###
+GET https://api.binance.com/api/v3/exchangeInfo
+
+
+### get current bids / asks
+GET https://api.binance.com/api/v3/depth?symbol=ADAUSDT&limit=5
+
+### get recent trades
+GET https://api.binance.com/api/v3/trades?symbol=ADAUSDT&limit=500
+
+
+###historical data
+# Name	Type	Mandatory	Description
+# symbol	STRING	YES
+# limit	INT	NO	Default 500; max 1000.
+# fromId	LONG	NO	TradeId to fetch from. Default gets most recent trades.
+GET http://api.binance.com/api/v3/historicalTrades?symbol=ADAUSDT
+
+###average price (5 min)
+GET https://api.binance.com/api/v3/avgPrice?symbol=ADAUSDT
+
+###24hr ticker price change statistics
+GET https://api.binance.com/api/v3/ticker/24hr?symbol=ADAUSDT
