@@ -29,6 +29,7 @@ public class CandleStickVolumeChart {
     private final List<Double> low = new ArrayList<>();
     private final List<Double> close = new ArrayList<>();
     private final List<Double> volume = new ArrayList<>();
+
     private Color leftDecoratorColor = new Color(247, 44, 123);
     private Color upColor = new Color(67, 181, 129);
     private Color downColor = new Color(240, 71, 71);
@@ -40,10 +41,13 @@ public class CandleStickVolumeChart {
     private Color chartFontColor = new Color(220, 221, 222);
     private Color xAxisTitleColor = new Color(142, 146, 151);
     private Color yAxisTitleColor = new Color(142, 146, 151);
-    private Point candleStickChartSize = new Point(1000, 440);
-    private Point volumeChartSize = new Point(1000, 200);
-    private Point decoratorSize = new Point(15, candleStickChartSize.y + volumeChartSize.y);
+
+    private int width = 1200;
+    private int candleSticksChartHeight = 600;
+    private int volumeChartHeight = 200;
+    private int decoratorWidth = 15;
     private int decoratorArc = 5;
+
     private Styler.ChartTheme chartTheme = Styler.ChartTheme.Matlab;
     private boolean isLegendVisible = false;
     private boolean antiAlias = true;
@@ -87,14 +91,13 @@ public class CandleStickVolumeChart {
         var candlesticksImg = BitmapEncoder.getBufferedImage(ohlcChart);
         var volumeImg = BitmapEncoder.getBufferedImage(volumeChart);
 
+        var totalHeight = volumeChartHeight + candleSticksChartHeight;
+        var totalWidth = width + decoratorWidth;
         var concatImg =
-                new BufferedImage(
-                        Math.max(candleStickChartSize.x, volumeChartSize.x) + decoratorSize.x,
-                        candleStickChartSize.y + volumeChartSize.y,
-                        BufferedImage.TYPE_INT_RGB);
+                new BufferedImage(totalWidth, totalHeight, BufferedImage.TYPE_INT_RGB);
         var g = concatImg.createGraphics();
-        g.drawImage(candlesticksImg, decoratorSize.x, 0, null);
-        g.drawImage(volumeImg, decoratorSize.x, candleStickChartSize.y, null);
+        g.drawImage(candlesticksImg, decoratorWidth, 0, null);
+        g.drawImage(volumeImg, decoratorWidth, candleSticksChartHeight, null);
         drawDecorator(g);
         g.dispose();
         return concatImg;
@@ -102,14 +105,15 @@ public class CandleStickVolumeChart {
 
     private void drawDecorator(Graphics2D g) {
         g.setColor(leftDecoratorColor);
-        g.fillRoundRect(0, 0, decoratorSize.x - decoratorArc, decoratorSize.y, decoratorArc, decoratorArc);
-        g.fillRect(decoratorArc, 0, decoratorSize.x - decoratorArc, decoratorSize.y);
+        var height = volumeChartHeight + candleSticksChartHeight;
+        g.fillRoundRect(0, 0, decoratorWidth - decoratorArc, height, decoratorArc, decoratorArc);
+        g.fillRect(decoratorArc, 0, decoratorWidth - decoratorArc, height);
     }
 
     @NotNull
     private CategoryChart getVolumeChart(List<?> xData, List<Double> volume) {
         var chart = new CategoryChartBuilder()
-                .width(volumeChartSize.x).height(volumeChartSize.y)
+                .width(width).height(volumeChartHeight)
                 .title("Volume")
                 .xAxisTitle("time")
                 .yAxisTitle("volume")
@@ -132,7 +136,7 @@ public class CandleStickVolumeChart {
                                    List<Double> volume) {
 
         var chart = new OHLCChartBuilder()
-                .width(candleStickChartSize.x).height(candleStickChartSize.y)
+                .width(width).height(candleSticksChartHeight)
                 .title(symbol)
                 .xAxisTitle("time")
                 .yAxisTitle("price")
