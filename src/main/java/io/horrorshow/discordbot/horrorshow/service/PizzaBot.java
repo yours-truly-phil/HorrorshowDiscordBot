@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import javax.security.auth.login.LoginException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,8 @@ public class PizzaBot extends ListenerAdapter {
     private static final String EMOJI_PIZZA = "\uD83C\uDF55";
     private static final String CMD_PRINT_MESSAGES = "\\$messages";
     private static final String CMD_AVERAGE_PRICE = "\\$avgPrice .+";
+    private static final String CMD_PRICE = "\\$price \\w+$";
+    private static final String CMD_CANDLESTICKS = "\\$candlesticks \\w+$";
 
     private final Map<String, Message> messages = new HashMap<>();
 
@@ -59,8 +63,38 @@ public class PizzaBot extends ListenerAdapter {
             } else if (rawMsgContent.matches(CMD_AVERAGE_PRICE)) {
                 var avgPrice = binanceAvgPrice(rawMsgContent);
                 sendMessage(event.getChannel().getId(), avgPrice);
+            } else if (rawMsgContent.matches(CMD_PRICE)) {
+                var price = binancePriceOf(rawMsgContent);
+                sendMessage(event.getChannel().getId(), price);
+            } else if (rawMsgContent.matches(CMD_CANDLESTICKS)) {
+                try {
+                    var symbol = token(rawMsgContent)[1];
+                    sendFile(event.getChannel(), binanceAPI.candleSticks(symbol), symbol + ".png");
+                } catch (IOException e) {
+                    log.error("Exception creating candle sticks graph", e);
+                }
             }
         }
+    }
+
+    private void sendFile(MessageChannel channel, byte[] bytes, String filename) {
+        channel.sendFile(bytes, filename).queue();
+
+    }
+
+    @Override
+    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
+        super.onGuildMessageReceived(event);
+    }
+
+    private String[] token(String s) {
+        return s.split(" ");
+    }
+
+    private String binancePriceOf(String rawMsgContent) {
+        var t = token(rawMsgContent);
+        if (t.length > 1) return binanceAPI.getPrice(t[1]).toString();
+        else return "missing symbol parameter: $price <SYMBOL>";
     }
 
     private String binanceAvgPrice(String rawMsgContent) {

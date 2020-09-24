@@ -19,6 +19,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <jda.version>4.2.0_168</jda.version>
+    <jda-utilities.version>2.1.4</jda-utilities.version>
+    <binance-api.version>master-SNAPSHOT</binance-api.version>
+    <xchart.version>3.6.5</xchart.version>
   </properties>
 
   <dependencies>
@@ -36,6 +39,25 @@
       <artifactId>JDA</artifactId>
       <version>${jda.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.jagrosh</groupId>
+      <artifactId>jda-utilities</artifactId>
+      <version>${jda-utilities.version}</version>
+      <scope>compile</scope>
+      <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>com.github.binance-exchange</groupId>
+      <artifactId>binance-java-api</artifactId>
+      <version>${binance-api.version}</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jfree/jfreechart -->
+    <dependency>
+      <groupId>org.knowm.xchart</groupId>
+      <artifactId>xchart</artifactId>
+      <version>${xchart.version}</version>
+    </dependency>
+
 
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -60,6 +82,10 @@
       <id>jcenter</id>
       <name>jcenter-bintray</name>
       <url>https://jcenter.bintray.com</url>
+    </repository>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
     </repository>
   </repositories>
 
