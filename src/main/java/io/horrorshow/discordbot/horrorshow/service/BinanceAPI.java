@@ -2,25 +2,31 @@ package io.horrorshow.discordbot.horrorshow.service;
 
 import com.binance.api.client.BinanceApiClientFactory;
 import com.binance.api.client.BinanceApiRestClient;
+import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.binance.api.client.domain.market.TickerPrice;
+import lombok.extern.slf4j.Slf4j;
 import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.OHLCChartBuilder;
+import org.knowm.xchart.OHLCSeries;
+import org.knowm.xchart.style.Styler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.awt.image.BufferedImage;
+import java.awt.*;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class BinanceAPI {
 
     private final String URL_BINANCE_AVG_PRICE;
@@ -45,35 +51,52 @@ public class BinanceAPI {
                         symbol,
                         CandlestickInterval.FIFTEEN_MINUTES,
                         500,
-                        System.currentTimeMillis() - 1000 * 60 * 60 * 12,
+                        System.currentTimeMillis() - 1000 * 60 * 60 * 24,
                         System.currentTimeMillis());
-        var chart = new OHLCChartBuilder().width(640).height(480).title(symbol).xAxisTitle("time").yAxisTitle("price").build();
-        var xData = candleSticks
-                .stream()
-                .map(candlestick -> new Date((candlestick.getOpenTime())))
-                .collect(Collectors.toList());
-        List<Number> open = candleSticks
-                .stream()
-                .map(candlestick -> Double.parseDouble(candlestick.getOpen()))
-                .collect(Collectors.toList());
-        List<Number> high = candleSticks
-                .stream()
-                .map(candlestick -> Double.parseDouble(candlestick.getHigh()))
-                .collect(Collectors.toList());
-        List<Number> low = candleSticks
-                .stream()
-                .map(candlestick -> Double.parseDouble(candlestick.getLow()))
-                .collect(Collectors.toList());
-        List<Number> close = candleSticks
-                .stream()
-                .map(candlestick -> Double.parseDouble(candlestick.getClose()))
-                .collect(Collectors.toList());
-        List<Number> volume = candleSticks
-                .stream()
-                .map(candlestick -> Double.parseDouble(candlestick.getVolume()))
-                .collect(Collectors.toList());
 
-        chart.addSeries(symbol, xData, open, high, low, close, volume);
+        var chart = new OHLCChartBuilder()
+                .width(1024).height(480)
+                .title(symbol)
+                .xAxisTitle("time")
+                .yAxisTitle("price")
+                .theme(Styler.ChartTheme.Matlab)
+                .build();
+
+        var styler = chart.getStyler();
+        styler.setLegendVisible(false);
+        styler.setAntiAlias(true);
+
+        styler.setPlotBackgroundColor(Color.DARK_GRAY);
+
+        styler.setChartBackgroundColor(Color.DARK_GRAY.darker().darker());
+        styler.setChartFontColor(Color.LIGHT_GRAY.brighter());
+        styler.setAnnotationsFontColor(Color.RED);
+        styler.setCursorFontColor(Color.GREEN);
+        styler.setXAxisTitleColor(Color.LIGHT_GRAY)
+                .setYAxisTitleColor(Color.LIGHT_GRAY);
+        styler.setXAxisTickLabelsColor(Color.LIGHT_GRAY.brighter())
+                .setYAxisTickLabelsColor(Color.LIGHT_GRAY.brighter());
+
+        var size = candleSticks.size();
+        List<Date> xData = new ArrayList<>(size);
+        List<Double> open = new ArrayList<>(size);
+        List<Double> high = new ArrayList<>(size);
+        List<Double> low = new ArrayList<>(size);
+        List<Double> close = new ArrayList<>(size);
+        List<Double> volume = new ArrayList<>(size);
+        for (Candlestick candle : candleSticks) {
+            xData.add(new Date(candle.getOpenTime()));
+            open.add(Double.parseDouble(candle.getOpen()));
+            high.add(Double.parseDouble(candle.getHigh()));
+            low.add(Double.parseDouble(candle.getLow()));
+            close.add(Double.parseDouble(candle.getClose()));
+            volume.add(Double.parseDouble(candle.getVolume()));
+        }
+        chart.addSeries(symbol, xData, open, high, low, close, volume)
+                .setUpColor(Color.GREEN.brighter())
+                .setDownColor(Color.RED.brighter())
+                .setOhlcSeriesRenderStyle(OHLCSeries.OHLCSeriesRenderStyle.HiLo);
+
         return BitmapEncoder.getBitmapBytes(chart, BitmapEncoder.BitmapFormat.PNG);
     }
 

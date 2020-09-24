@@ -79,7 +79,6 @@ public class PizzaBot extends ListenerAdapter {
 
     private void sendFile(MessageChannel channel, byte[] bytes, String filename) {
         channel.sendFile(bytes, filename).queue();
-
     }
 
     @Override
