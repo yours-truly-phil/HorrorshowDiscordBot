@@ -4,6 +4,7 @@ import com.binance.api.client.BinanceApiClientFactory;
 import com.binance.api.client.BinanceApiRestClient;
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.binance.api.client.domain.market.TickerPrice;
+import com.binance.api.client.exception.BinanceApiException;
 import io.horrorshow.discordbot.horrorshow.graph.CandleStickVolumeChart;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ public class BinanceAPI {
         client = factory.newRestClient();
     }
 
-    public byte[] candleSticks(String symbol) throws IOException {
+    public byte[] candleSticksVolumeChartImage(String symbol) throws IOException, BinanceApiException {
         var candleSticks =
                 client.getCandlestickBars(
                         symbol,
@@ -46,7 +47,21 @@ public class BinanceAPI {
                         System.currentTimeMillis() - 1000 * 60 * 60 * 24,
                         System.currentTimeMillis());
 
-        return new CandleStickVolumeChart().createChartAsBytes(symbol, candleSticks);
+        String title = get24HrSummaryString(symbol);
+
+        return new CandleStickVolumeChart()
+                .setTitle(title)
+                .createChartAsBytes(symbol, candleSticks);
+    }
+
+    public String get24HrSummaryString(String symbol) {
+        var dayStats = client.get24HrPriceStatistics(symbol);
+        var priceChangePercent = Double.parseDouble(dayStats.getPriceChangePercent());
+        var priceChange = Double.parseDouble(dayStats.getPriceChange());
+        var title = "%s Last: %s 24hr: %.2f%% (%f) volume: %s"
+                .formatted(symbol, dayStats.getLastPrice(),
+                        priceChangePercent, priceChange, dayStats.getVolume());
+        return title;
     }
 
     public TickerPrice getPrice(String symbol) {

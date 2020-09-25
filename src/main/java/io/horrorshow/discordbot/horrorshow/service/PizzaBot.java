@@ -1,5 +1,6 @@
 package io.horrorshow.discordbot.horrorshow.service;
 
+import com.binance.api.client.exception.BinanceApiException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -34,9 +35,9 @@ public class PizzaBot extends ListenerAdapter {
 
     private static final String EMOJI_PIZZA = "\uD83C\uDF55";
     private static final String CMD_PRINT_MESSAGES = "\\$messages";
-    private static final String CMD_AVERAGE_PRICE = "\\$avgPrice .+";
-    private static final String CMD_PRICE = "\\$price \\w+$";
-    private static final String CMD_CANDLESTICKS = "\\$candlesticks \\w+$";
+    private static final String CMD_AVERAGE_PRICE = "\\$avgPrice [A-Z0-9-_.]{1,20}$";
+    private static final String CMD_PRICE = "\\$price [A-Z0-9-_.]{1,20}$";
+    private static final String CMD_CANDLESTICKS = "\\$candlesticks [A-Z0-9-_.]{1,20}$";
 
     private final Map<String, Message> messages = new HashMap<>();
 
@@ -69,7 +70,9 @@ public class PizzaBot extends ListenerAdapter {
             } else if (rawMsgContent.matches(CMD_CANDLESTICKS)) {
                 try {
                     var symbol = token(rawMsgContent)[1];
-                    sendFile(event.getChannel(), binanceAPI.candleSticks(symbol), symbol + ".png");
+                    sendFile(event.getChannel(), binanceAPI.candleSticksVolumeChartImage(symbol), symbol + ".png");
+                } catch (BinanceApiException e) {
+                    sendMessage(event.getChannel().getId(), e.getMessage());
                 } catch (IOException e) {
                     log.error("Exception creating candle sticks graph", e);
                 }

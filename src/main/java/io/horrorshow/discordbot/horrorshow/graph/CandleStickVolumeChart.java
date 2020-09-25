@@ -2,7 +2,6 @@ package io.horrorshow.discordbot.horrorshow.graph;
 
 import com.binance.api.client.domain.market.Candlestick;
 import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.knowm.xchart.*;
 import org.knowm.xchart.style.CategoryStyler;
@@ -19,16 +18,7 @@ import java.util.Date;
 import java.util.List;
 
 @Getter
-@Setter
 public class CandleStickVolumeChart {
-
-    private final List<Date> xDataDates = new ArrayList<>();
-    private final List<Long> xDataLong = new ArrayList<>();
-    private final List<Double> open = new ArrayList<>();
-    private final List<Double> high = new ArrayList<>();
-    private final List<Double> low = new ArrayList<>();
-    private final List<Double> close = new ArrayList<>();
-    private final List<Double> volume = new ArrayList<>();
 
     private Color leftDecoratorColor = new Color(247, 44, 123);
     private Color upColor = new Color(67, 181, 129);
@@ -42,23 +32,137 @@ public class CandleStickVolumeChart {
     private Color xAxisTitleColor = new Color(142, 146, 151);
     private Color yAxisTitleColor = new Color(142, 146, 151);
 
-    private int width = 1200;
-    private int candleSticksChartHeight = 600;
-    private int volumeChartHeight = 200;
+    private int width = 1000;
+    private int candleSticksChartHeight = 450;
+    private int volumeChartHeight = 180;
     private int decoratorWidth = 15;
     private int decoratorArc = 5;
 
     private Styler.ChartTheme chartTheme = Styler.ChartTheme.Matlab;
     private boolean isLegendVisible = false;
     private boolean antiAlias = true;
+    private String title;
 
-    public CandleStickVolumeChart() {
+    public CandleStickVolumeChart setTitle(String title) {
+        this.title = title;
+        return this;
+    }
 
+    public CandleStickVolumeChart setAntiAlias(boolean antiAlias) {
+        this.antiAlias = antiAlias;
+        return this;
+    }
+
+    public CandleStickVolumeChart setIsLegendVisible(boolean isLegendVisible) {
+        this.isLegendVisible = isLegendVisible;
+        return this;
+    }
+
+    public CandleStickVolumeChart setChartTheme(Styler.ChartTheme chartTheme) {
+        this.chartTheme = chartTheme;
+        return this;
+    }
+
+    public CandleStickVolumeChart setDecoratorArc(int decoratorArc) {
+        this.decoratorArc = decoratorArc;
+        return this;
+    }
+
+    public CandleStickVolumeChart setDecoratorWidth(int decoratorWidth) {
+        this.decoratorWidth = decoratorWidth;
+        return this;
+    }
+
+    public CandleStickVolumeChart setVolumeChartHeight(int height) {
+        this.volumeChartHeight = height;
+        return this;
+    }
+
+    public CandleStickVolumeChart setCandleSticksChartHeight(int height) {
+        this.candleSticksChartHeight = height;
+        return this;
+    }
+
+    public CandleStickVolumeChart setWidth(int width) {
+        this.width = width;
+        return this;
+    }
+
+    public CandleStickVolumeChart setYAxisTitleColor(Color color) {
+        yAxisTitleColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setXAxisTitleColor(Color color) {
+        xAxisTitleColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setChartFontColor(Color color) {
+        chartFontColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setChartBackgroundColor(Color color) {
+        chartBackgroundColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setPlotBackgroundColor(Color color) {
+        plotBackgroundColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setYAxisTickLabelsColor(Color color) {
+        yAxisTickLabelsColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setXAxisTickLabelsColor(Color color) {
+        xAxisTickLabelsColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setVolumeChartFillColor(Color color) {
+        volumeFillColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setDownColor(Color color) {
+        downColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setUpColor(Color color) {
+        upColor = color;
+        return this;
+    }
+
+    public CandleStickVolumeChart setLeftDecoratorColor(Color color) {
+        leftDecoratorColor = color;
+        return this;
     }
 
     public byte[] createChartAsBytes(String symbol, List<Candlestick> candlesticks) throws IOException {
+
+        var size = candlesticks.size();
+
+        List<Date> xDataDates = new ArrayList<>(size);
+        List<Long> xDataLong = new ArrayList<>(size);
+        List<Double> open = new ArrayList<>(size);
+        List<Double> high = new ArrayList<>(size);
+        List<Double> low = new ArrayList<>(size);
+        List<Double> close = new ArrayList<>(size);
+        List<Double> volume = new ArrayList<>(size);
+
         for (Candlestick candle : candlesticks) {
-            addToXDataOpenHighLowCloseVolumeLists(candle);
+            xDataDates.add(new Date(candle.getOpenTime()));
+            xDataLong.add(candle.getOpenTime());
+            open.add(Double.parseDouble(candle.getOpen()));
+            high.add(Double.parseDouble(candle.getHigh()));
+            low.add(Double.parseDouble(candle.getLow()));
+            close.add(Double.parseDouble(candle.getClose()));
+            volume.add(Double.parseDouble(candle.getVolume()));
         }
 
         var ohlcChart = getOhlcChart(symbol, xDataDates, open, high, low, close, volume);
@@ -67,16 +171,6 @@ public class CandleStickVolumeChart {
         BufferedImage image = drawCandlestickVolumeChart(ohlcChart, volumeChart);
 
         return getBytes(image);
-    }
-
-    private void addToXDataOpenHighLowCloseVolumeLists(Candlestick candle) {
-        xDataDates.add(new Date(candle.getOpenTime()));
-        xDataLong.add(candle.getOpenTime());
-        open.add(Double.parseDouble(candle.getOpen()));
-        high.add(Double.parseDouble(candle.getHigh()));
-        low.add(Double.parseDouble(candle.getLow()));
-        close.add(Double.parseDouble(candle.getClose()));
-        volume.add(Double.parseDouble(candle.getVolume()));
     }
 
     private byte[] getBytes(BufferedImage image) throws IOException {
@@ -137,7 +231,7 @@ public class CandleStickVolumeChart {
 
         var chart = new OHLCChartBuilder()
                 .width(width).height(candleSticksChartHeight)
-                .title(symbol)
+                .title((title != null) ? title : symbol)
                 .xAxisTitle("time")
                 .yAxisTitle("price")
                 .theme(chartTheme)
