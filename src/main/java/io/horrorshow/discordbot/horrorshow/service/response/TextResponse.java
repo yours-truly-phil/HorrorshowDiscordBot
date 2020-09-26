@@ -1,4 +1,4 @@
-package io.horrorshow.discordbot.horrorshow.service.binance;
+package io.horrorshow.discordbot.horrorshow.service.response;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -9,6 +9,6 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class BinanceTextTickerResponse {
+public class TextResponse {
     private final String text;
 }

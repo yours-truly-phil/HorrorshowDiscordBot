@@ -3,6 +3,7 @@ package io.horrorshow.discordbot.horrorshow.service.binance;
 import com.binance.api.client.exception.BinanceApiException;
 import io.horrorshow.discordbot.horrorshow.graph.CandleStickVolumeChart;
 import io.horrorshow.discordbot.horrorshow.service.RespondsToDiscordMessage;
+import io.horrorshow.discordbot.horrorshow.service.response.ImageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ import java.util.function.Consumer;
 
 @Service
 @Slf4j
-public class BinanceGraphs implements RespondsToDiscordMessage<BinanceGraphsResponse> {
+public class BinanceGraphs implements RespondsToDiscordMessage<ImageResponse> {
 
     private static final String CMD_CANDLESTICKS = "^\\$candlesticks [A-Z0-9-_.]{1,20}$";
 
@@ -39,12 +40,12 @@ public class BinanceGraphs implements RespondsToDiscordMessage<BinanceGraphsResp
     }
 
     @Override
-    public void computeMessage(String message, Consumer<BinanceGraphsResponse> consumer) {
+    public void computeMessage(String message, Consumer<ImageResponse> consumer) {
         var tokens = message.split(" ");
         if (tokens.length > 1) {
             try {
                 var image = candleSticksVolumeChartImage(tokens[1]);
-                var response = new BinanceGraphsResponse(image, tokens[1] + ".png");
+                var response = new ImageResponse(image, tokens[1] + ".png");
                 consumer.accept(response);
             } catch (IOException e) {
                 log.error("error creating candlesticks volume chart image for token {}", tokens[1], e);

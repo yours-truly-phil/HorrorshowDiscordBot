@@ -3,6 +3,7 @@ package io.horrorshow.discordbot.horrorshow.controller;
 import io.horrorshow.discordbot.horrorshow.helper.Utils;
 import io.horrorshow.discordbot.horrorshow.service.binance.BinanceGraphs;
 import io.horrorshow.discordbot.horrorshow.service.binance.BinanceTextTicker;
+import io.horrorshow.discordbot.horrorshow.service.response.ImageResponse;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -90,20 +91,22 @@ public class DiscordBot extends ListenerAdapter {
             }
 
             if (binanceGraphs.canCompute(rawMsgContent)) {
-                binanceGraphs.computeMessage(rawMsgContent, (response) -> {
-                    try {
-                        if (!response.isHasErrors()) {
-                            sendFile(event.getChannel(), Utils.toBytes(response.getBufferedImage()), "graph.png");
-                        } else {
-                            sendMessage(event.getChannel().getId(), response.getError());
-                        }
-                    } catch (IOException e) {
-
-                        log.error("unable to get bytes for BufferedImage", e);
-                        sendMessage(event.getChannel().getId(), "error drawing image");
-                    }
-                });
+                binanceGraphs.computeMessage(rawMsgContent, (response) -> drawImage(event, response));
             }
+        }
+    }
+
+    private void drawImage(@NotNull MessageReceivedEvent event, ImageResponse response) {
+        try {
+            if (!response.isHasErrors()) {
+                sendFile(event.getChannel(), Utils.toBytes(response.getBufferedImage()), "graph.png");
+            } else {
+                sendMessage(event.getChannel().getId(), response.getError());
+            }
+        } catch (IOException e) {
+
+            log.error("unable to get bytes for BufferedImage", e);
+            sendMessage(event.getChannel().getId(), "error drawing image");
         }
     }
 
