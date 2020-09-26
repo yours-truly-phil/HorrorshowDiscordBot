@@ -1,6 +1,8 @@
-package io.horrorshow.discordbot.horrorshow.service;
+package io.horrorshow.discordbot.horrorshow.controller;
 
-import com.binance.api.client.exception.BinanceApiException;
+import io.horrorshow.discordbot.horrorshow.helper.Utils;
+import io.horrorshow.discordbot.horrorshow.service.binance.BinanceGraphs;
+import io.horrorshow.discordbot.horrorshow.service.binance.BinanceTextTicker;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -29,25 +31,25 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class PizzaBot extends ListenerAdapter {
+public class DiscordBot extends ListenerAdapter {
 
     private static final String PROP_TOKEN = "${jda.discord.token}";
 
     private static final String EMOJI_PIZZA = "\uD83C\uDF55";
     private static final String CMD_PRINT_MESSAGES = "\\$messages";
-    private static final String CMD_AVERAGE_PRICE = "\\$avgPrice [A-Z0-9-_.]{1,20}$";
-    private static final String CMD_PRICE = "\\$price [A-Z0-9-_.]{1,20}$";
-    private static final String CMD_CANDLESTICKS = "\\$candlesticks [A-Z0-9-_.]{1,20}$";
 
     private final Map<String, Message> messages = new HashMap<>();
 
     @Getter
     private final JDA jda;
-    private final BinanceAPI binanceAPI;
+    private final BinanceGraphs binanceGraphs;
+    private final BinanceTextTicker binanceTextTicker;
 
-    public PizzaBot(@Autowired @Value(PROP_TOKEN) String token,
-                    @Autowired BinanceAPI binanceAPI) throws LoginException {
-        this.binanceAPI = binanceAPI;
+    public DiscordBot(@Autowired @Value(PROP_TOKEN) String token,
+                      @Autowired BinanceGraphs binanceGraphs,
+                      @Autowired BinanceTextTicker binanceTextTicker) throws LoginException {
+        this.binanceGraphs = binanceGraphs;
+        this.binanceTextTicker = binanceTextTicker;
         Assert.notNull(token, "Token must not be null, did you forget to set ${%s}?".formatted(PROP_TOKEN));
         jda = JDABuilder.createDefault(token).build();
         jda.setAutoReconnect(true);
@@ -56,26 +58,36 @@ public class PizzaBot extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+
         if (!event.getAuthor().isBot()) {
+
             var rawMsgContent = event.getMessage().getContentRaw();
+
             if (rawMsgContent.matches(CMD_PRINT_MESSAGES)) {
                 log.info("Print messages command by {}", event.getAuthor());
                 printMessages(event.getChannel());
-            } else if (rawMsgContent.matches(CMD_AVERAGE_PRICE)) {
-                var avgPrice = binanceAvgPrice(rawMsgContent);
-                sendMessage(event.getChannel().getId(), avgPrice);
-            } else if (rawMsgContent.matches(CMD_PRICE)) {
-                var price = binancePriceOf(rawMsgContent);
-                sendMessage(event.getChannel().getId(), price);
-            } else if (rawMsgContent.matches(CMD_CANDLESTICKS)) {
-                try {
-                    var symbol = token(rawMsgContent)[1];
-                    sendFile(event.getChannel(), binanceAPI.candleSticksVolumeChartImage(symbol), symbol + ".png");
-                } catch (BinanceApiException e) {
-                    sendMessage(event.getChannel().getId(), e.getMessage());
-                } catch (IOException e) {
-                    log.error("Exception creating candle sticks graph", e);
-                }
+            }
+
+            if (binanceTextTicker.matches(rawMsgContent)) {
+                binanceTextTicker.computeMessage(rawMsgContent, response -> {
+                    sendMessage(event.getChannel().getId(), response.getText());
+                });
+            }
+
+            if (binanceGraphs.matches(rawMsgContent)) {
+                binanceGraphs.computeMessage(rawMsgContent, (response) -> {
+                    try {
+                        if (!response.isHasErrors()) {
+                            sendFile(event.getChannel(), Utils.toBytes(response.getBufferedImage()), "graph.png");
+                        } else {
+                            sendMessage(event.getChannel().getId(), response.getError());
+                        }
+                    } catch (IOException e) {
+
+                        log.error("unable to get bytes for BufferedImage", e);
+                        sendMessage(event.getChannel().getId(), "error drawing image");
+                    }
+                });
             }
         }
     }
@@ -87,22 +99,6 @@ public class PizzaBot extends ListenerAdapter {
     @Override
     public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
         super.onGuildMessageReceived(event);
-    }
-
-    private String[] token(String s) {
-        return s.split(" ");
-    }
-
-    private String binancePriceOf(String rawMsgContent) {
-        var t = token(rawMsgContent);
-        if (t.length > 1) return binanceAPI.getPrice(t[1]).toString();
-        else return "missing symbol parameter: $price <SYMBOL>";
-    }
-
-    private String binanceAvgPrice(String rawMsgContent) {
-        var tokens = rawMsgContent.split(" ");
-        if (tokens.length > 1) return binanceAPI.getAveragePrice(tokens[1]);
-        else return "missing symbol parameter: $avgPrice <SYMBOL>";
     }
 
     public List<TextChannel> getTextChannels() {

@@ -143,7 +143,7 @@ public class CandleStickVolumeChart {
         return this;
     }
 
-    public byte[] createChartAsBytes(String symbol, List<Candlestick> candlesticks) throws IOException {
+    public BufferedImage createCandlesticksVolumeChart(String symbol, List<Candlestick> candlesticks) throws IOException {
 
         var size = candlesticks.size();
 
@@ -168,16 +168,7 @@ public class CandleStickVolumeChart {
         var ohlcChart = getOhlcChart(symbol, xDataDates, open, high, low, close, volume);
         var volumeChart = getVolumeChart(xDataLong, volume);
 
-        BufferedImage image = drawCandlestickVolumeChart(ohlcChart, volumeChart);
-
-        return getBytes(image);
-    }
-
-    private byte[] getBytes(BufferedImage image) throws IOException {
-        var baos = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", baos);
-        baos.flush();
-        return baos.toByteArray();
+        return drawCandlestickVolumeChart(ohlcChart, volumeChart);
     }
 
     @NotNull
