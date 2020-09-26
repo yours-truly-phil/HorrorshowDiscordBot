@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class BinanceGraphs implements RespondsToDiscordMessage<BinanceGraphsResponse> {
 
-    private static final String CMD_CANDLESTICKS = "\\$candlesticks [A-Z0-9-_.]{1,20}$";
+    private static final String CMD_CANDLESTICKS = "^\\$candlesticks [A-Z0-9-_.]{1,20}$";
 
     private final BinanceApiWrapper binanceApi;
 
@@ -34,7 +34,7 @@ public class BinanceGraphs implements RespondsToDiscordMessage<BinanceGraphsResp
     }
 
     @Override
-    public boolean matches(String msg) {
+    public boolean canCompute(String msg) {
         return msg.matches(CMD_CANDLESTICKS);
     }
 
@@ -50,5 +50,11 @@ public class BinanceGraphs implements RespondsToDiscordMessage<BinanceGraphsResp
                 log.error("error creating candlesticks volume chart image for token {}", tokens[1], e);
             }
         }
+    }
+
+    @Override
+    public String help() {
+        return "Available commands for %s\n    %s"
+                .formatted(BinanceGraphs.class.getSimpleName(), CMD_CANDLESTICKS);
     }
 }

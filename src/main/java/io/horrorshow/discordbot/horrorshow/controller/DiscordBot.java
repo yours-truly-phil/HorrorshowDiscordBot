@@ -36,7 +36,8 @@ public class DiscordBot extends ListenerAdapter {
     private static final String PROP_TOKEN = "${jda.discord.token}";
 
     private static final String EMOJI_PIZZA = "\uD83C\uDF55";
-    private static final String CMD_PRINT_MESSAGES = "\\$messages";
+    private static final String CMD_PRINT_MESSAGES = "^\\$messages$";
+    private static final String CMD_HELP = "^\\$help$";
 
     private final Map<String, Message> messages = new HashMap<>();
 
@@ -56,6 +57,16 @@ public class DiscordBot extends ListenerAdapter {
         jda.addEventListener(this);
     }
 
+    public String getHelpString() {
+        return "Help - " + this.getClass().getSimpleName() + "\n"
+                + "reacts to reactions with " + EMOJI_PIZZA + "\n"
+                + "show messages with " + CMD_PRINT_MESSAGES + "\n"
+                + "show help with " + CMD_HELP + "\n"
+                + "\nAdditional modules:\n"
+                + binanceGraphs.help() + "\n"
+                + binanceTextTicker.help();
+    }
+
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
 
@@ -68,13 +79,17 @@ public class DiscordBot extends ListenerAdapter {
                 printMessages(event.getChannel());
             }
 
-            if (binanceTextTicker.matches(rawMsgContent)) {
+            if (rawMsgContent.matches(CMD_HELP)) {
+                sendMessage(event.getChannel().getId(), getHelpString());
+            }
+
+            if (binanceTextTicker.canCompute(rawMsgContent)) {
                 binanceTextTicker.computeMessage(rawMsgContent, response -> {
                     sendMessage(event.getChannel().getId(), response.getText());
                 });
             }
 
-            if (binanceGraphs.matches(rawMsgContent)) {
+            if (binanceGraphs.canCompute(rawMsgContent)) {
                 binanceGraphs.computeMessage(rawMsgContent, (response) -> {
                     try {
                         if (!response.isHasErrors()) {

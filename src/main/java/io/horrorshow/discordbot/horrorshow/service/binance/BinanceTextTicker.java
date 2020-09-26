@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Service
 public class BinanceTextTicker implements RespondsToDiscordMessage<BinanceTextTickerResponse> {
@@ -42,7 +43,7 @@ public class BinanceTextTicker implements RespondsToDiscordMessage<BinanceTextTi
     }
 
     @Override
-    public boolean matches(String message) {
+    public boolean canCompute(String message) {
         return MATCHES.stream().anyMatch(message::matches);
     }
 
@@ -55,5 +56,13 @@ public class BinanceTextTicker implements RespondsToDiscordMessage<BinanceTextTi
         } else {
             consumer.accept(new BinanceTextTickerResponse("couldn't compute message %s".formatted(message)));
         }
+    }
+
+    @Override
+    public String help() {
+        return "Available commands for %s\n%s"
+                .formatted(this.getClass().getSimpleName(),
+                        MATCHES.stream().map(s -> "    " + s)
+                                .collect(Collectors.joining("\n")));
     }
 }
