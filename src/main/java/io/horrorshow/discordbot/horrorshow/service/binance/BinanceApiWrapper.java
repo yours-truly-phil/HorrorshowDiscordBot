@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -55,5 +56,16 @@ public class BinanceApiWrapper {
     public String getAveragePrice(String symbol) {
         var params = Map.of("symbol", symbol);
         return restTemplate.getForObject(Utils.concatUrlParams(Utils.GET_AVG_PRICE_URL, params), String.class);
+    }
+
+    public List<String> getAllTokens() {
+        return binanceApiRestClient
+                .getAllPrices().stream()
+                .map(TickerPrice::getSymbol)
+                .collect(Collectors.toList());
+    }
+
+    public List<TickerPrice> getAllPrices() {
+        return binanceApiRestClient.getAllPrices();
     }
 }
