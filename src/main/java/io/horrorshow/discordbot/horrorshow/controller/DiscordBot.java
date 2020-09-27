@@ -87,13 +87,13 @@ public class DiscordBot extends ListenerAdapter {
             }
 
             if (binanceTextTicker.canCompute(rawMsgContent)) {
-                binanceTextTicker.computeMessage(rawMsgContent, response -> {
-                    sendMessage(event.getChannel().getId(), response.getText());
-                });
+                binanceTextTicker.computeMessage(rawMsgContent,
+                        response -> sendMessage(event.getChannel().getId(), response.getText()));
             }
 
             if (binanceGraphs.canCompute(rawMsgContent)) {
-                binanceGraphs.computeMessage(rawMsgContent, (response) -> drawImage(event, response));
+                binanceGraphs.computeMessage(rawMsgContent,
+                        response -> drawImage(event, response));
             }
         }
     }
