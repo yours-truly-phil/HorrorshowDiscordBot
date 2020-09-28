@@ -19,7 +19,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -70,9 +69,7 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     @Override
-    @Async
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-
         if (!event.getAuthor().isBot()) {
 
             var rawMsgContent = event.getMessage().getContentRaw();

@@ -2,6 +2,7 @@ package io.horrorshow.discordbot.horrorshow.service.binance;
 
 import io.horrorshow.discordbot.horrorshow.service.RespondsToDiscordMessage;
 import io.horrorshow.discordbot.horrorshow.service.response.TextResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class BinanceTextTicker implements RespondsToDiscordMessage<TextResponse> {
 
     private static final String CMD_AVERAGE_PRICE = "^\\$avgPrice [A-Z0-9-_.]{1,20}$";
