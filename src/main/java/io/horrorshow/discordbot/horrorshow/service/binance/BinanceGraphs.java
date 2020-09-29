@@ -11,12 +11,13 @@ import org.springframework.stereotype.Service;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
 public class BinanceGraphs implements RespondsToDiscordMessage<ImageResponse> {
 
-    private static final String CMD_CANDLESTICKS = "^\\$candlesticks [A-Z0-9-_.]{1,20}$";
+    private static final Pattern CMD_CANDLESTICKS = Pattern.compile("^\\$candlesticks [A-Z0-9-_.]{1,20}$");
 
     private final BinanceApiWrapper binanceApi;
 
@@ -36,7 +37,7 @@ public class BinanceGraphs implements RespondsToDiscordMessage<ImageResponse> {
 
     @Override
     public boolean canCompute(String msg) {
-        return msg.matches(CMD_CANDLESTICKS);
+        return CMD_CANDLESTICKS.matcher(msg).matches();
     }
 
     @Override

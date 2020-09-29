@@ -7,22 +7,24 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class BinanceTextTicker implements RespondsToDiscordMessage<TextResponse> {
 
-    private static final String CMD_AVERAGE_PRICE = "^\\$avgPrice [A-Z0-9-_.]{1,20}$";
-    private static final String CMD_PRICE = "^\\$price [A-Z0-9-_.]{1,20}$";
-    private static final String CMD_ALL_TOKENS = "^\\$allTokens$";
-    private static final String CMD_ALL_PRICES = "^\\$allPrices$";
+    private static final Pattern CMD_AVERAGE_PRICE = Pattern.compile("^\\$avgPrice [A-Z0-9-_.]{1,20}$");
+    private static final Pattern CMD_PRICE = Pattern.compile("^\\$price [A-Z0-9-_.]{1,20}$");
+    private static final Pattern CMD_ALL_TOKENS = Pattern.compile("^\\$allTokens$");
+    private static final Pattern CMD_ALL_PRICES = Pattern.compile("^\\$allPrices$");
 
-    private static final Set<String> MATCHES = Set.of(CMD_AVERAGE_PRICE, CMD_PRICE, CMD_ALL_TOKENS, CMD_ALL_PRICES);
+    private static final Set<Pattern> MATCHES = Set.of(CMD_AVERAGE_PRICE, CMD_PRICE, CMD_ALL_TOKENS, CMD_ALL_PRICES);
 
     private final BinanceApiWrapper binanceApi;
 
@@ -68,25 +70,27 @@ public class BinanceTextTicker implements RespondsToDiscordMessage<TextResponse>
     private List<TextResponse> getAllPrices() {
         int max = 2000;
         var allPrices = binanceApi.getAllPrices()
-                .stream().map(tickerPrice -> "[" + tickerPrice.getSymbol() + ":" + tickerPrice.getPrice() + "]")
+                .stream().map(tickerPrice ->
+                        MessageFormat.format("[{0}:{1}]",
+                                tickerPrice.getSymbol(), tickerPrice.getPrice()))
                 .collect(Collectors.joining(""));
         return divideStringIntoParts(max, allPrices);
     }
 
     @Override
     public boolean canCompute(String message) {
-        return MATCHES.stream().anyMatch(message::matches);
+        return MATCHES.stream().anyMatch(pattern -> pattern.matcher(message).matches());
     }
 
     @Override
     public void computeMessage(String message, Consumer<TextResponse> consumer) {
-        if (message.matches(CMD_AVERAGE_PRICE)) {
+        if (CMD_AVERAGE_PRICE.matcher(message).matches()) {
             consumer.accept(getAvgPriceOf(message));
-        } else if (message.matches(CMD_PRICE)) {
+        } else if (CMD_PRICE.matcher(message).matches()) {
             consumer.accept(getPriceOf(message));
-        } else if (message.matches(CMD_ALL_TOKENS)) {
+        } else if (CMD_ALL_TOKENS.matcher(message).matches()) {
             getAllTokens().forEach(consumer);
-        } else if (message.matches(CMD_ALL_PRICES)) {
+        } else if (CMD_ALL_PRICES.matcher(message).matches()) {
             getAllPrices().forEach(consumer);
         } else {
             consumer.accept(new TextResponse("couldn't compute message %s".formatted(message)));
