@@ -8,11 +8,8 @@ import org.knowm.xchart.style.CategoryStyler;
 import org.knowm.xchart.style.OHLCStyler;
 import org.knowm.xchart.style.Styler;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -143,7 +140,7 @@ public class CandleStickVolumeChart {
         return this;
     }
 
-    public BufferedImage createCandlesticksVolumeChart(String symbol, List<Candlestick> candlesticks) throws IOException {
+    public BufferedImage createCandlesticksVolumeChart(String symbol, List<Candlestick> candlesticks) {
 
         var size = candlesticks.size();
 

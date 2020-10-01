@@ -1,6 +1,5 @@
 package io.horrorshow.discordbot.horrorshow.service.binance;
 
-import com.binance.api.client.exception.BinanceApiException;
 import io.horrorshow.discordbot.horrorshow.graph.CandleStickVolumeChart;
 import io.horrorshow.discordbot.horrorshow.service.RespondsToDiscordMessage;
 import io.horrorshow.discordbot.horrorshow.service.response.ImageResponse;
@@ -9,7 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -25,14 +25,19 @@ public class BinanceGraphs implements RespondsToDiscordMessage<ImageResponse> {
         this.binanceApi = binanceApiWrapper;
     }
 
-    public BufferedImage candleSticksVolumeChartImage(String symbol) throws IOException, BinanceApiException {
-        var candleSticks = binanceApi.getCandlesticks(symbol);
+    public BufferedImage candleSticksVolumeChartImage(String symbol) throws ExecutionException, InterruptedException {
+        return candleSticksVolumeChartImageAsync(symbol).get();
+    }
 
-        String title = binanceApi.get24HrSummaryString(symbol);
+    public CompletableFuture<BufferedImage> candleSticksVolumeChartImageAsync(String symbol) {
+        var candlesticks =
+                CompletableFuture.supplyAsync(() -> binanceApi.getCandlesticks(symbol));
 
-        return new CandleStickVolumeChart()
-                .setTitle(title)
-                .createCandlesticksVolumeChart(symbol, candleSticks);
+        var title =
+                CompletableFuture.supplyAsync(() -> binanceApi.get24HrSummaryString(symbol));
+
+        return candlesticks.thenCombine(title, (c, t) ->
+                new CandleStickVolumeChart().setTitle(t).createCandlesticksVolumeChart(symbol, c));
     }
 
     @Override
@@ -48,8 +53,8 @@ public class BinanceGraphs implements RespondsToDiscordMessage<ImageResponse> {
                 var image = candleSticksVolumeChartImage(tokens[1]);
                 var response = new ImageResponse(image, tokens[1] + ".png");
                 consumer.accept(response);
-            } catch (IOException e) {
-                log.error("error creating candlesticks volume chart image for token {}", tokens[1], e);
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Problem creating candlesticks volume chart image", e);
             }
         }
     }
